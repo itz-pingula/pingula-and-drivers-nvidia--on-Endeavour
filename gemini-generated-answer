@@ -1,0 +1,153 @@
+drivers for broadcom device linuxTo set up Broadcom wireless devices on Linux, identify your specific hardware ID and install the matching open-source or proprietary driver package. Most modern Broadcom chips work out-of-the-box using built-in kernel modules, while older or proprietary chips require manual package installation.Identify Your Broadcom DeviceRun the following command in your terminal to find your exact Broadcom wireless chipset ID:bashlspci -vnn -d 14e4:
+Use code with caution.Common Linux Drivers for Broadcombrcmfmac / brcmsmac: Open-source, modern drivers built directly into the Linux kernel. They support most recent chipsets (brcmfmac) and older softmac devices (brcmsmac) automatically without extra setup.b43 / b43legacy: Open-source reverse-engineered drivers for older chipsets. Users on Ask Ubuntu generally agree that you need to install accompanying tools like firmware-b43-installer via your package manager for these to function.broadcom-wl (STA): Broadcom's proprietary hybrid driver used for specific adapters (like BCM4352 or older MacBooks). On Debian or Ubuntu-based distributions, this is typically installed via the bcmwl-kernel-source package.Installation Steps (Debian / Ubuntu / Linux Mint)Connect your computer to a temporary wired Ethernet connection or a phone USB tether so you can download packages.Open your terminal and update your package lists:bashsudo apt update
+Use code with caution.Install the proprietary driver if your card requires broadcom-wl:bashsudo apt install bcmwl-kernel-source
+Use code with caution.Or install the open-source firmware installer if your card relies on b43:bashsudo apt install firmware-b43-installer
+Use code with caution.Reboot your system to activate the new module.If you share your specific Broadcom device ID (from lspci) and your Linux distribution (e.g., Ubuntu, Fedora, Arch), I can give you the exact command or package name you need.Ask UbuntuInstalling Broadcom Wireless Drivers - Ask UbuntuInstall B43 Packages: The `firmware-b43-installer` and `b43-fwcutter` packages are commonly used together to install Broadcom driv...GitHubclear-linux-documentation/source/tutorials/broadcom.rst at master · clearlinux/clear-linux-documentation · GitHubBroadcom wireless identification: lspci -vnn -d 14e4:. Drivers: - brcmfmac, brcmsmac (formerly brcm80211): Open-source, upstream, ...YouTube·PulsarTECHLinux Mint: Wi-Fi Adapter Not Detected — FIXED! (Broadcom/ ...if you're facing an issue after installing Linux Mint on your computer PC or laptop your Wi-Fi is not working then you're in the r...8:13Show all[ghani@penguin ~]$ nvidia-inst --open
+2026-08-25 20:12:38: Info: nvidia-inst version 26.1.1-1
+2026-08-25 20:12:38: Info: Command line: nvidia-inst --open
+2026-08-25 20:12:38: Info: Selected mode: nvidia (Nvidia's open source)
+2026-08-25 20:12:38: Info: Installing packages: dkms nvidia-open-dkms nvidia-settings nvidia-hook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+COMMANDS TO RUN:
+    pacman -Syuq --noconfirm --noprogressbar --needed dkms nvidia-open-dkms nvidia-settings nvidia-hook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+==> NOTE: running the commands may take several minutes...
+
+[sudo] password for ghani: 
+:: Synchronizing package databases...
+error: failed to synchronize all databases (unable to lock database)
+[ghani@penguin ~]$ lspci -vnn -d 14e4:
+09:00.0 Network controller [0280]: Broadcom Inc. and subsidiaries BCM4360 802.11ac Dual Band Wireless Network Adapter [14e4:43a0] (rev 03)
+        Subsystem: Broadcom Inc. and subsidiaries Device [14e4:0619]
+        Flags: bus master, fast devsel, latency 0, IRQ 29
+        Memory at fc400000 (64-bit, non-prefetchable) [size=32K]
+        Memory at fc200000 (64-bit, non-prefetchable) [size=2M]
+        Capabilities: <access denied>
+        Kernel driver in use: wl
+        Kernel modules: bcma, wl
+
+[ghani@penguin ~]$ 
+
+
+
+
+
+
+
+
+I also have a rtx 3060, for some reasons its pretty laggy like 3~6 frames max on wayland, even though Im on wayland (not a game, like actualy Os) but x11 works fine.
+so lets go through this (EndeavourOS)The 3–6 FPS lag on Wayland with your RTX 3060 on EndeavourOS happens because the system is defaulting to a slow fallback software renderer (like llvmpipe) or encountering an unconfigured kernel setup instead of utilizing hardware acceleration.Your Broadcom BCM4360 wireless chip [14e4:43a0] is already working properly and actively using the proprietary wl kernel module.Step 1: Fix the Pacman Lock ErrorThe error: failed to synchronize all databases (unable to lock database) error in your terminal means a package manager process was interrupted or is still running in the background.Run this command to remove the leftover lock file:bashsudo rm /var/lib/pacman/db.lck
+Use code with caution.Step 2: Fix the RTX 3060 Wayland LagTo fix the severe lag, you must explicitly force Nvidia Kernel Modesetting (KMS) so Wayland can directly communicate with your GPU.1. Add Nvidia to InitramfsOpen your system's hardware configuration file in a terminal editor:bashsudo nano /etc/mkinitcpio.conf
+Use code with caution.Find the line starting with MODULES=(...) and add the Nvidia modules inside the parentheses:textMODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+Use code with caution.Press Ctrl+O then Enter to save, and Ctrl+X to exit.2. Rebuild InitramfsGenerate the updated boot images by running:bashsudo mkinitcpio -P
+Use code with caution.3. Enable Kernel ModesettingEndeavourOS uses systemd-boot by default on recent installations. Run this to check your boot loader:bashbootctl status
+Use code with caution.If using systemd-boot: Open your default loader entry configuration file (usually found under /efi/loader/entries/ or /boot/loader/entries/). Add nvidia_drm.modeset=1 to the end of the options line.If using GRUB: Open /etc/default/grub, find the GRUB_CMDLINE_LINUX_DEFAULT="..." line, append nvidia_drm.modeset=1 inside the quotes, then update GRUB:bashsudo grub-mkconfig -o /boot/grub/grub.cfg
+Use code with caution.Step 3: Clean Install the Open DriversNow that the package manager lock is gone, complete your Nvidia installation using the native nvidia-inst helper tool:bashnvidia-inst --open
+Use code with caution.Once the installation finishes, reboot your PC to apply the graphics rules and activate hardware acceleration under Wayland.Which Desktop Environment (e.g., KDE Plasma, GNOME) are you currently running? Let me know if you hit any errors during the mkinitcpio build process so we can verify your boot config.EndeavourOSX11 or Wayland? - Newbie - EndeavourOS Forum19-Jan-2025 — Hi everyone! I switched from GTX 1660 Ti to RX 7600 XT GPU and started to think should I switch to Wayland or stay on X11? I daily...NVIDIA Developer ForumsMouse Cursor Freezing/Stuttering on External Monitor under ...It looks like kwin_scene_opengl is failing to attach the framebuffer properly, which I suspect is causing the rendering drops/curs...GitHubSluggish/laggy UI on Arch Linux + KDE Plasma + Wayland + ...Portmaster UI feels noticeably sluggish/laggy/buggy on Linux in my setup. The app starts and connects normally, but the UI feels s...Show all[ghani@penguin ~]$ bootctl status
+Failed to read "/efi/EFI/systemd": Permission denied
+Failed to open '/efi/loader/loader.conf': Permission denied
+System:
+      Firmware: UEFI 2.70 (American Megatrends 5.17)
+ Firmware Arch: x64
+   Secure Boot: disabled (setup)
+  TPM2 Support: yes
+  Measured UKI: no
+  Boot into FW: supported
+
+Current Boot Loader:
+       Product: systemd-boot 260.1-2-arch
+     Features: ✓ Boot counting
+               ✓ Menu timeout control
+               ✓ One-shot menu timeout control
+               ✓ Default entry control
+               ✓ One-shot entry control
+               ✓ Support for XBOOTLDR partition
+               ✓ Support for passing random seed to OS
+               ✓ Load drop-in drivers
+               ✓ Support Type #1 sort-key field
+               ✓ Support @saved pseudo-entry
+               ✓ Support Type #1 devicetree field
+               ✓ Enroll SecureBoot keys
+               ✓ Retain SHIM protocols
+               ✓ Menu can be disabled
+               ✓ Multi-Profile UKIs are supported
+               ✓ Loader reports network boot URL
+               ✓ Support Type #1 uki field
+               ✓ Support Type #1 uki-url field
+               ✓ Loader reports active TPM2 PCR banks
+     Partition: /dev/disk/by-partuuid/c2cf0a92-282f-4f2b-b0b5-82619a06755d
+        Loader: └─/efi//EFI/SYSTEMD/SYSTEMD-BOOTX64.EFI
+ Current Entry: 9d07d29accb049a4a5dc0883744f16de-6.19.14-arch1-1.conf
+
+Random Seed:
+ System Token: set
+       Exists: Can't access /efi/loader/random-seed (Permission denied)
+
+Available Boot Loaders on ESP:
+          ESP: /efi (/dev/disk/by-partuuid/c2cf0a92-282f-4f2b-b0b5-82619a06755d)
+         File: (can't access /efi: Permission denied)
+
+Boot Loaders Listed in EFI Variables:
+        Title: Linux Boot Manager
+           ID: 0x0001
+       Status: active, boot-order
+    Partition: /dev/disk/by-partuuid/c2cf0a92-282f-4f2b-b0b5-82619a06755d
+         File: └─/efi//EFI/SYSTEMD/SYSTEMD-BOOTX64.EFI
+
+        Title: Windows Boot Manager
+           ID: 0x0000
+       Status: active, boot-order
+    Partition: /dev/disk/by-partuuid/30937a04-b723-428c-b55c-40064d7eb263
+         File: └─/efi//EFI/MICROSOFT/BOOT/BOOTMGFW.EFI
+
+        Title: Windows Boot Manager
+           ID: 0x0007
+       Status: active, boot-order
+    Partition: /dev/disk/by-partuuid/c2cf0a92-282f-4f2b-b0b5-82619a06755d
+         File: └─/efi//EFI/MICROSOFT/BOOT/BOOTMGFW.EFI
+
+sudo nano /etc/mkinitcpio.conf
+this is a empty file ?
+should I just go with nvidia-inst --open , since in liveos , I went with nvidia turing so ? stillYou are using systemd-boot, which confirms you must add the kernel parameter to your specific boot loader entries.Do not just run nvidia-inst --open yet. Without configuring Kernel Modesetting (KMS) and your initramfs, your system will still fail to load the driver properly on Wayland, leaving you stuck with 3 FPS.1. The Empty /etc/mkinitcpio.conf FileEndeavourOS shifted from a single /etc/mkinitcpio.conf file to a split directory layout. The primary configuration now resides inside /etc/mkinitcpio.d/.To inject your Nvidia modules properly:Create a drop-in file specifically for your modules:bashsudo nano /etc/mkinitcpio.d/nvidia.conf
+Use code with caution.Type the following text into the empty file:textMODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+Use code with caution.Save (Ctrl+O, Enter) and exit (Ctrl+X).Rebuild your boot images:bashsudo mkinitcpio -P
+Use code with caution.2. Enable Kernel Modesetting in systemd-bootBecause your ESP partition requires root access (Permission denied), you need sudo to modify the boot loader entries.Navigate to your entries directory:bashcd /efi/loader/entries/
+Use code with caution.List the configuration files available:bashls
+Use code with caution.Open the entry configuration file currently in use (based on your log, it looks like 9d07d29accb049a4a5dc0883744f16de-6.19.14-arch1-1.conf or a similarly named .conf file):bashsudo nano 9d07d29accb049a4a5dc0883744f16de-6.19.14-arch1-1.conf
+Use code with caution.Find the line starting with options. Go to the very end of that line, add a space, and append:textnvidia_drm.modeset=1
+Use code with caution.(Ensure it is all on the same line as the other options).Save and exit.3. Clear the Lock and Install DriverNow you can clear your interrupted package database and run your installation script:bashsudo rm /var/lib/pacman/db.lck
+nvidia-inst --open
+Use code with caution.Once the script completes successfully, reboot your computer.Are you using KDE Plasma or GNOME as your desktop? Knowing this helps ensure your specific compositor settings are correctly mapped to Nvidia's hardware acceleration layers.sudo nano /etc/mkinitcpio.d/nvidia.conf
+this directory doesnt exsist
+[ghani@penguin ~]$ sudo nano /etc/mkinitcpio.d/nvidia.conf
+[ghani@penguin ~]$ cd /efi/loader/entries/
+bash: cd: /efi/loader/entries/: Permission denied
+[ghani@penguin ~]$ sudo cd /efi/loader/entries/
+sudo: cd: command not found
+sudo: "cd" is a shell built-in command, it cannot be run directly.
+sudo: the -s option may be used to run a privileged shell.
+sudo: the -D option may be used to run a command in a specific directory.Because /etc/mkinitcpio.d/ does not exist on your system, you are likely running a clean configuration that utilizes the older single-file fallback or an alternative hook structure.cd is a shell built-in command, so running sudo cd directly will always fail.Step 1: Use a Direct Path to Edit the Boot Loader EntryInstead of trying to change directories, open the specific configuration file directly using its absolute path with sudo:bashsudo nano /efi/loader/entries/9d07d29accb049a4a5dc0883744f16de-6.19.14-arch1-1.conf
+Use code with caution.Look for the line starting with options.Go to the very end of that line, press space, and append:textnvidia_drm.modeset=1
+Use code with caution.Save the file (Ctrl+O, then Enter) and exit (Ctrl+X).Step 2: Handle the Missing mkinitcpio DirectoryIf /etc/mkinitcpio.d/ does not exist, look for the standard configurations file instead. Run this to check if /etc/mkinitcpio.conf is actually missing or if it just looked empty because of a typo:bashls -la /etc/mkinitcpio.conf
+Use code with caution.If the file exists: Open it:bashsudo nano /etc/mkinitcpio.conf
+Use code with caution.Find MODULES=(...) and change it to:textMODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+Use code with caution.If it does not exist: EndeavourOS might be using Dracut instead of mkinitcpio on your installation. Let's check which initramfs generator your system uses by running:bashls /etc/dracut.conf.d/
+Use code with caution.Step 3: Clear the Lock and Install DriverRun these commands to clear the package manager block and perform the driver installation:bashsudo rm -f /var/lib/pacman/db.lck
+nvidia-inst --open
+Use code with caution.What did the ls /etc/dracut.conf.d/ command return? If your system uses Dracut instead of mkinitcpio, we will need a slightly different configuration line to force Nvidia into the boot image.[ghani@penguin ~]$ ls /etc/dracut.conf.d/
+eos-defaults.conf  eos_nvidia_open.conf
+
+I did append the nvidia.drm modeset
+what next ? although I do remember doing a driver update but didn't completed it .Your system uses Dracut instead of mkinitcpio to generate its boot images.The file eos_nvidia_open.conf is already handling the Nvidia modules for you automatically. You do not need to worry about manual configuration files.Step 1: Regenerate Dracut Boot ImagesSince you appended nvidia_drm.modeset=1 to your boot loader options, you must force Dracut to rebuild the initramfs images so the system acknowledges the changes on boot:bashsudo dracut-rebuild
+Use code with caution.(If your system says command not found, run sudo dracut --force instead).Step 2: Clear the Interrupted Database LockBecause your previous driver update was interrupted, the package manager is still locked. Remove the lock file:bashsudo rm -f /var/lib/pacman/db.lck
+Use code with caution.Step 3: Run the Open Driver InstallerNow execute the helper script to properly download, build, and link your open-source kernel modules for your RTX 3060:bashnvidia-inst --open
+Use code with caution.Let the command run completely until you see your normal user terminal prompt return.Step 4: RebootRestart your computer to drop the software rasterizer and initialize hardware acceleration:bashreboot
+Use code with caution.Once you log back into your Wayland session, try moving a few windows around. Let me know if the 3–6 FPS lag is completely gone or if the system hangs during the boot screen.nvidia-utils-610.57.04-1-x86_64 downloading...
+ linux-7.1.9.arch1-2-x86_64 downloading...
+ linux-firmware-intel-20260810-2-any downloading...
+ linux-firmware-nvidia-20260810-2-any downloading...
+ qt6-webengine-6.11.2-1-x86_64 downloading...
+
+looks like some importants things to me which are downloading .Yes, those are critical core system updates [ Ask Ubuntu ]. Because your previous driver update was interrupted, nvidia-inst is running a full system upgrade (pacman -Syu) to ensure your kernel and graphics drivers match perfectly.Why these packages are important:linux-7.1.9...: This is your actual Linux kernel. Your GPU drivers compile themselves directly into this kernel using DKMS.nvidia-utils...: These are the foundational libraries that let your Desktop Environment use the RTX 3060 for hardware acceleration.linux-firmware-nvidia...: This contains the microcode binary blobs needed to initialize and wake up your RTX 3060 graphics card at boot.qt6-webengine...: A core application framework component used by many modern Linux desktop applications and settings menus.What to do next:Do not close the terminal. Let these packages finish downloading and installing completely.Watch for Dracut building images. At the very end of the installation, you will see text scroll by showing that the initramfs images are being automatically rebuilt for the new linux-7.1.9 kernel.Reboot immediately once the terminal prompt returns to normal by running:bashreboot
+Use code with caution.Once you log back into Wayland after the reboot, your system will be running the brand-new kernel and using the properly initialized Nvidia open drivers. Let me know how smooth the interface feels when it boots back up!
