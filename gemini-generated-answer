@@ -149,5 +149,29 @@ Use code with caution.Once you log back into your Wayland session, try moving a 
  linux-firmware-nvidia-20260810-2-any downloading...
  qt6-webengine-6.11.2-1-x86_64 downloading...
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# To run tomorrow if you decide to cancel tonight:
+sudo rate-mirrors arch | sudo tee /etc/pacman.d/mirrorlist
+nvidia-inst --open
+
+
 looks like some importants things to me which are downloading .Yes, those are critical core system updates [ Ask Ubuntu ]. Because your previous driver update was interrupted, nvidia-inst is running a full system upgrade (pacman -Syu) to ensure your kernel and graphics drivers match perfectly.Why these packages are important:linux-7.1.9...: This is your actual Linux kernel. Your GPU drivers compile themselves directly into this kernel using DKMS.nvidia-utils...: These are the foundational libraries that let your Desktop Environment use the RTX 3060 for hardware acceleration.linux-firmware-nvidia...: This contains the microcode binary blobs needed to initialize and wake up your RTX 3060 graphics card at boot.qt6-webengine...: A core application framework component used by many modern Linux desktop applications and settings menus.What to do next:Do not close the terminal. Let these packages finish downloading and installing completely.Watch for Dracut building images. At the very end of the installation, you will see text scroll by showing that the initramfs images are being automatically rebuilt for the new linux-7.1.9 kernel.Reboot immediately once the terminal prompt returns to normal by running:bashreboot
 Use code with caution.Once you log back into Wayland after the reboot, your system will be running the brand-new kernel and using the properly initialized Nvidia open drivers. Let me know how smooth the interface feels when it boots back up!
